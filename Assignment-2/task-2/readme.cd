@@ -1,1 +1,33 @@
+task-2
 
+You have to make an AI for this game using Genetic
+Algorithm.
+
+Before that you are required to make some changes
+to the code.
+1.Instead of taking input from the mouse, the bar
+at the bottom of the screen should move using
+left and right arrow keys.
+2.Add game-over logic when the ball touches the
+bottom of the screen.
+3.Add points to the game. Points are equal to the
+number of times you blocked the ball from
+reaching the bottom.
+
+You are required to implement a 1-hidden layer
+neural network to figure out which direction you
+need to move the bottom bar to prevent the ball
+from touching the bottom.
+
+Your input array can be your position, your speed,
+the position of the ball, the speed of the ball,
+etc.
+
+Your output should be the probability of moving
+left, right, or staying at the same position.
+
+Your network will look something like this.
+
+You will need to apply crossover and mutation on
+the weight matrices of your network. The fitness
+function will be the number of points.

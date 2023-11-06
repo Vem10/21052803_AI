@@ -1,0 +1,112 @@
+import numpy as np
+import random
+import cv2
+import copy
+
+def initialize_canvas(image_path):
+    original_image = cv2.imread(image_path)
+
+    if original_image is None:
+        print("Error: Unable to load the image.")
+        return None, None
+
+    h, w, _ = original_image.shape
+    canvas = np.zeros((h, w, 3), dtype=np.uint8)
+    return canvas, original_image
+
+def generate_population(N, canvas):     
+    population = []
+    h, w, _ = canvas.shape
+
+    for _ in range(N):
+        x = random.randint(0, w)
+        y = random.randint(0, h)
+        size = random.randint(10, min(w, h) // 4)
+        color = [random.randint(0, 255) for _ in range(3)]
+        opacity = random.uniform(0, 1)
+
+        square = {"x": x, "y": y, "size": size, "color": color, "opacity": opacity}
+        population.append(square)
+
+    return population
+
+def crossover(parent1, parent2):
+    child = {}
+    
+    for key in parent1:
+        if random.random() < 0.5:
+            child[key] = parent1[key]
+        else:
+            child[key] = parent2[key]
+
+    return child
+
+def mutate(square, w, h, mutation_rate):
+    if square is not None:
+        if random.random() < mutation_rate:
+            mutation_type = random.choice(["position", "size", "color", "opacity"])
+            if mutation_type == "position":
+                square["x"] = random.randint(0, w)
+                square["y"] = random.randint(0, h)
+            elif mutation_type == "size":
+                square["size"] = random.randint(10, min(w, h) // 4)
+            elif mutation_type == "color":
+                square["color"] = [random.randint(0, 255) for _ in range(3)]
+            elif mutation_type == "opacity":
+                square["opacity"] = random.uniform(0, 1)
+    return square
+
+def select_best(population, canvas, original_image):
+    best_squares = []
+
+    for square in population:
+        canvas_copy = copy.deepcopy(canvas)
+        cv2.rectangle(canvas_copy, (square["x"], square["y"]),
+                      (square["x"] + square["size"], square["y"] + square["size"]),
+                      square["color"], -1)
+        diff = cv2.absdiff(original_image, canvas_copy)
+        fitness = np.sum(diff)
+        square["fitness"] = fitness
+
+    population.sort(key=lambda x: x["fitness"])
+    best_squares = population[:N]
+
+    return best_squares
+
+def genetic_algorithm(image_path, N, generations, mutation_rate):
+    canvas, original_image = initialize_canvas(image_path)
+
+    if canvas is None:
+        return
+
+    h, w, _ = canvas.shape
+    population = generate_population(N, canvas)
+
+    for generation in range(generations):
+        new_population = []
+
+        for _ in range(N):
+            parent1 = random.choice(population)
+            parent2 = random.choice(population)
+            child = crossover(parent1, parent2)
+            child = mutate(child, w, h, mutation_rate)
+            new_population.append(child)
+
+        population = select_best(new_population, canvas, original_image)
+
+        best_fitness = population[0]["fitness"]
+        print(f"Generation {generation + 1}, Best Fitness: {best_fitness}")
+
+    best_square = population[0]
+    cv2.rectangle(canvas, (best_square["x"], best_square["y"]),
+                  (best_square["x"] + best_square["size"], best_square["y"] + best_square["size"]),
+                  best_square["color"], -1)
+    cv2.imwrite("output_image.png", canvas)
+
+if __name__ == "__main__":
+    image_path = "ai\pop.png"  # Replace with the path to your input image
+    N = 50  # Population size
+    generations = 2  # Number of generations
+    mutation_rate = 0.2
+
+    genetic_algorithm(image_path, N, generations, mutation_rate)
